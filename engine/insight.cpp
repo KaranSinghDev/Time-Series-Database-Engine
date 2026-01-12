@@ -4,13 +4,6 @@
 #include <vector>
 #include <filesystem>
 
-// These constants are defined in shard.cpp, so they are not needed here.
-// We can remove them to avoid duplication.
-// const uint64_t SHARD_DURATION_MS = 3600000;
-// const std::string DATA_DIRECTORY = "data";
-
-// get_shard_path is an internal detail, so it doesn't need to be in a header.
-// It's fine for it to be here.
 std::string get_shard_path(uint64_t timestamp); // Forward declaration
 
 extern "C" {
@@ -24,8 +17,6 @@ extern "C" {
 
     // The implementation of the query function, which delegates to the ShardReader class.
     int64_t query_range(uint64_t start_ts, uint64_t end_ts, DataPoint* out_buffer, int64_t buffer_capacity) {
-        // The implementation for this function is in shard.cpp now.
-        // My apologies, I am correcting a previous error. The logic should be here.
         int64_t points_found = 0;
         const uint64_t SHARD_DURATION_MS = 3600000;
         const std::string DATA_DIRECTORY = "data";
@@ -51,7 +42,7 @@ extern "C" {
         }
         return points_found;
     }
-} // extern "C"
+} 
 
 // The implementation of the helper function.
 std::string get_shard_path(uint64_t timestamp) {

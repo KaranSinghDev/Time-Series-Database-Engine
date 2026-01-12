@@ -29,9 +29,8 @@ public:
     explicit ShardReader(const std::string& file_path);
     std::vector<DataPoint> read_all();
     
-    // --- FIX: Add a static helper function ---
-    // This can be called without creating a ShardReader object.
-    // It can operate on any input stream.
+
+    
     static std::vector<DataPoint> read_all_points(std::istream& stream);
 
 private:

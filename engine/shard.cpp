@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstring>
 
-// These helpers can now be used by our new static function.
+
 uint64_t read_varint(std::istream& in) {
     uint64_t value = 0;
     int shift = 0;
@@ -23,7 +23,7 @@ void write_varint(std::ostream& out, uint64_t value) {
     out.put(static_cast<char>(value));
 }
 
-// --- NEW STATIC HELPER FUNCTION IMPLEMENTATION ---
+
 std::vector<DataPoint> ShardReader::read_all_points(std::istream& stream) {
     std::vector<DataPoint> points;
     
@@ -49,7 +49,7 @@ std::vector<DataPoint> ShardReader::read_all_points(std::istream& stream) {
         memcpy(&point.value, &current_value_bits, sizeof(point.value));
         prev_value_xor = current_value_bits;
         
-        // If read_varint hit EOF, timestamp might be 0, we should not add it.
+
         if (point.timestamp != 0 || !points.empty()) {
             points.push_back(point);
         }
@@ -86,7 +86,7 @@ void ShardWriter::initialize_state() {
     }
     this->file.seekg(0);
     
-    // --- FIX: Use the new static helper function ---
+
     std::vector<DataPoint> points = ShardReader::read_all_points(this->file);
     
     if (!points.empty()) {
@@ -100,7 +100,7 @@ void ShardWriter::initialize_state() {
             this->prev_timestamp_delta = 0;
         }
     }
-    // Clear any error flags (like EOF) on the stream so we can write to it.
+    
     this->file.clear();
 }
 

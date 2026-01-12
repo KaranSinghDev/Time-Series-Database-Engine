@@ -69,7 +69,7 @@ class DashboardWindow(QMainWindow):
         stats_layout.addLayout(self.stat_max)
         stats_layout.addLayout(self.stat_min)
 
-        # --- FIX: Assemble the new Vertical Layout ---
+       
         main_layout.addLayout(controls_layout)
         main_layout.addWidget(self.plot_widget) # Graph is the main widget
         main_layout.addLayout(stats_layout)
@@ -144,7 +144,7 @@ class DashboardWindow(QMainWindow):
             self.reset_stats()
 
             if not points:
-                # Don't show a pop-up if auto-refreshing, just clear the view
+              
                 if not self.refresh_timer.isActive():
                     self.show_message_box("No Data", "No telemetry data found for the selected time range.", QMessageBox.Icon.Information)
                 return

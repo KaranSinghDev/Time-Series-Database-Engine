@@ -3,10 +3,8 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import List
 
-# --- Part 1: C++ Bridge Setup (Updated for Query) ---
+# --- Part 1: C++ Bridge Setup  ---
 
-# First, define a ctypes Structure that EXACTLY mirrors the C++ struct.
-# This is our Python representation of a DataPoint.
 class CDataPoint(ctypes.Structure):
     _fields_ = [
         ("timestamp", ctypes.c_uint64),
@@ -98,5 +96,4 @@ async def query_data_range(
         point = result_buffer[i]
         results.append({"timestamp": point.timestamp, "value": point.value})
     
-    # We will hardcode the metric name for now.
     return {"metric": "cpu.load.avg", "points": results}

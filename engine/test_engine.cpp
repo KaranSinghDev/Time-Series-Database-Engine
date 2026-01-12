@@ -3,12 +3,7 @@
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <vector>
-// ...
 
-// --- Test Fixture for Sharded Queries ---
-// A test fixture is a class that inherits from ::testing::Test.
-// It allows us to reuse the same configuration and helper functions for multiple tests.
-// GTest will automatically call SetUp() before each test and TearDown() after.
 class ShardedQueryTest : public ::testing::Test {
 protected:
     // This function runs BEFORE every TEST_F in this suite.

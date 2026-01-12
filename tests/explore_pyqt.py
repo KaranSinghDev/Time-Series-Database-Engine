@@ -99,14 +99,12 @@ class ExplorationWindow(QMainWindow):
         print(" - Click the 'Generate New Data' button to see the 'clicked' signal in action.")
         print(" - Notice the plot updating every second from the QTimer's 'timeout' signal.")
 
-    # --- This is our custom 'Slot' ---
-# --- This is our custom 'Slot' ---
+
     def update_plot_data(self):
         """This function is called ONLY when the update_button's 'clicked' signal is emitted."""
         print("Signal received: update_button was clicked. Regenerating plot data.")
         
-        # --- FIX: Regenerate BOTH x and y data to ensure they always match. ---
-        # We will reset the plot to its initial state of 10 points.
+
         self.x_data = list(range(10))
         self.y_data = [random.uniform(0, 10) for _ in range(10)]
         
