@@ -1,14 +1,55 @@
-# Python
+# ===================================================================
+#               Comprehensive .gitignore for C++/Python Project
+# ===================================================================
+
+# --- Python ---
+# Ignore the virtual environment directory.
 venv/
+/venv/
+
+# Ignore Python bytecode and cache files.
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# C++ Build artifacts
-/engine/build/
+# --- C++ Build System & Artifacts ---
+# Ignore CMake build directories. Using a wildcard (*) ensures
+# that any directory named 'build' is ignored, which is a robust pattern.
+build/
+**/build/
 
-# OS-specific files
+# Ignore compiled libraries and executables that might be created
+# outside the build directory by mistake.
+*.so
+*.a
+*.dll
+*.exe
+*.out
+
+# --- OS-specific files ---
+# macOS
 .DS_Store
-Thumbs.db
 
-# IDE-specific files
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Linux
+*~
+.*.swp
+
+# --- IDE & Editor Configuration ---
+# Visual Studio Code
 .vscode/
+
+# CLion
+.idea/
+
+# --- Test & Benchmark Artifacts ---
+# Ignore any log files or data files created during local testing.
+*.log
+*.bin
+/data/
+
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
