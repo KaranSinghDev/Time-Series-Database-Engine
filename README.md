@@ -11,6 +11,9 @@ The system is designed to ingest numerical time-series data, store it efficientl
 - **Efficient Custom Compression**: Implemented time-series-specific compression algorithms (Delta-of-Delta for timestamps, XOR for values) from scratch to maximize storage efficiency
 - **Modern API Layer**: A clean, documented RESTful API is provided using Python 3 and FastAPI for easy integration
 - **Professional Tooling**: The project is fully containerized with Docker, built with CMake, and verified with a comprehensive Pytest and C++ unit testing suite
+- **PyQt Diagnostic Dashboard**: A standalone client application built with PyQt6 provides a diagnostic workflow for querying and visualizing historical datasets with features like auto-refresh and interactive crosshairs.
+- **Professional Testing Suite**: The C++ engine is rigorously validated with a comprehensive test suite using the Google Test (GTest) framework, managed and run via CMake. The API is verified with Pytest.
+
 
 ## System Architecture: The Write Path
 
