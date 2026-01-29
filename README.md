@@ -1,6 +1,6 @@
 # C++ Time-Series Database & Streaming Analytics Platform (Insight-TSDB)
 
-A high-performance time-series database engine built from scratch in C++, integrated with a **real-time streaming analytics pipeline using Apache Kafka and Apache Spark**. This project is a deep dive into both low-level systems programming and high-throughput data engineering.
+Intuition: To build a high-performance time-series database engine built from scratch in C++, along with provision of a **real-time streaming analytics pipeline**. This project is an attempt to understand both low-level systems programming and high-throughput data engineering.
 
 The system is designed to:
 1.  **Store** numerical time-series data with maximum efficiency using custom C++ compression.
@@ -48,7 +48,7 @@ graph TD
 | **Kafka Ingestion Throughput** | **~267,000 ops/sec** | Validates the scalability of the Kafka pipeline, achieved by using a parallel Python producer to bypass the GIL and saturate multiple cores. |
 | Storage Efficiency | ~8.2 bytes/point | A 50% storage reduction via custom C++ compression on high-entropy data. |
 | Cold Query Latency (p99) | ~12 ms | Querying a 24-hour window proves the time-sharded C++ design avoids slow full-disk scans for historical data analysis. |
-| C++ Ingestion Throughput | ~4,000 points/sec | Baseline for single-point file I/O. Establishes the need for the high-throughput Kafka pipeline for large-scale ingestion. |
+| C++ Ingestion Throughput | ~4,000 points/sec | Baseline for single-point file I/O |
 
 ## Getting Started
 
