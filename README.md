@@ -21,32 +21,22 @@ The project is a hybrid architecture combining a high-performance C++ database w
 
 ### Architecture Diagram
 
+
 ```mermaid
-flowchart TD
-    subgraph "Data Sources"
-        Producer[C++ Engine / Producer Script]
+graph TD
+    subgraph "Streaming & Real-Time Analytics Pipeline"
+        Producer[C++ Engine / Data Source] -- "1. Raw Metrics Stream" --> Kafka[Apache Kafka Topic<br/>'raw-metrics'];
+        Kafka -- "2. Read Stream" --> Spark[Spark Structured Streaming];
+        Spark -- "3. Detect Anomalies" --> KafkaAlerts[Apache Kafka Topic<br/>'alerts'];
+        KafkaAlerts -- "4. Consume Alerts" --> Consumer[Monitoring Dashboard / Alerting System];
     end
 
-    subgraph "Streaming & Analytics Pipeline"
-        Producer -- "1. Raw Metrics (250k ops/sec)" --> Kafka[Apache Kafka Topic: raw-metrics]
-        Kafka -- "2. Read Stream" --> Spark[Spark Structured Streaming]
-        Spark -- "3. Analyze Compression Ratio" --> Spark
-        Spark -- "4. Write Alert on Anomaly" --> KafkaAlerts[Kafka Topic: alerts]
-        KafkaAlerts -- "5. Consume Alert" --> Consumer[Alerting System]
+    subgraph "Storage & Query Engine (for Historical Analysis)"
+        Producer -- "Direct Ingest via API" --> API[FastAPI Service];
+        API -- "C++ Bridge" --> CppEngine[High-Performance C++ Engine];
+        CppEngine <--> Shards[(Disk Storage:<br/>Time-Sharded .bin Files)];
+        Client[GUI / API Client] -- "Query Time Range" --> API;
     end
-
-    subgraph "C++ Storage & Query Engine"
-        Producer -- "Direct Ingest" --> API[FastAPI Service]
-        API -- "ctypes bridge" --> CppEngine[C++ Engine]
-        CppEngine <--> Shards[Disk: Time-Sharded .bin Files]
-        API -- "Query" --> Client[GUI / Client]
-    end
-
-    classDef streaming fill:#1f78b4,stroke:#0d4473,color:#fff;
-    classDef storage fill:#4caf50,stroke:#2e7d32,color:#fff;
-
-    class Kafka, KafkaAlerts, Spark, Producer, Consumer streaming;
-    class API, CppEngine, Shards, Client storage;
 ```
 
 ## Benchmark Analysis
