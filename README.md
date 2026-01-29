@@ -40,7 +40,7 @@ graph TD
 ```
 
 ## Benchmark Analysis
-
+The tests were done extensively on commodity hardware : intel i7-12700h (14C/20T), DDR4 RAM (3200Mhz), PCIe NVMe Gen 4 SSD.
 ### Performance Results
 
 | Metric | Result | Analysis |
