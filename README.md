@@ -1,137 +1,115 @@
-# C++ Time-Series Database (Insight-TSDB)
+# C++ Time-Series Database & Streaming Analytics Platform (Insight-TSDB)
 
-A high-performance time-series database engine built from scratch in C++ and exposed via a Python/FastAPI service. This project is a deep dive into the fundamentals of data engineering, focusing on single-machine performance, storage efficiency, and low-level system optimization.
+A high-performance time-series database engine built from scratch in C++, integrated with a **real-time streaming analytics pipeline using Apache Kafka and Apache Spark**. This project is a deep dive into both low-level systems programming and high-throughput data engineering.
 
-The system is designed to ingest numerical time-series data, store it efficiently using custom compression, and query it with sub-millisecond latency.
+The system is designed to:
+1.  **Store** numerical time-series data with maximum efficiency using custom C++ compression.
+2.  **Query** data with sub-millisecond latency for interactive analysis.
+3.  **Monitor** the health of the data stream in real-time to detect anomalies and ensure data integrity.
 
 ## Key Features
 
-- **Custom C++ Storage Engine**: Core logic is written in modern C++ (C++17) for direct control over memory layout and to avoid managed runtime overhead
-- **High-Performance Querying**: A time-sharded storage architecture transforms slow, random disk reads into fast, sequential scans, enabling extremely low query latencies
-- **Efficient Custom Compression**: Implemented time-series-specific compression algorithms (Delta-of-Delta for timestamps, XOR for values) from scratch to maximize storage efficiency
-- **Modern API Layer**: A clean, documented RESTful API is provided using Python 3 and FastAPI for easy integration
-- **Professional Tooling**: The project is fully containerized with Docker, built with CMake, and verified with a comprehensive Pytest and C++ unit testing suite
+- **Custom C++ Storage Engine**: Core logic is written in C++17 for direct memory control, achieving a **2.0x compression ratio** with custom Delta-of-Delta and XOR algorithms.
+- **High-Performance Querying**: A time-sharded architecture enables **sub-16ms cold query latencies**, avoiding slow full-disk scans.
+- **Real-Time Anomaly Detection**: A streaming pipeline uses **Apache Spark** to continuously analyze metrics from an **Apache Kafka** topic, detecting data integrity failures (e.g., compression ratio drops) in real-time.
+- **High-Throughput Ingestion**: The Kafka pipeline is tuned for performance, capable of sustaining ingestion rates of over **250,000 messages/sec** on commodity hardware.
+- **Modern API & Tooling**: The system is fully containerized with **Docker Compose**, built with **CMake**, and includes a Python/FastAPI service for RESTful access.
 
-## System Architecture: The Write Path
+## System Architecture
 
-The engine's design is inspired by a Log-Structured Merge-Tree (LSM-Tree) to optimize for high-throughput data ingestion while ensuring data durability.
-
-1. **Ingest**: An API request is received
-2. **Write-Ahead Log (WAL)**: The data point is immediately appended to a WAL on disk. This guarantees that even if the server crashes, no data will be lost
-3. **Memtable**: The data point is simultaneously inserted into an in-memory table for fast access
-4. **Query**: "Hot" queries for very recent data are served directly from the memtable at memory speed
-5. **Flush & Compress**: Once the memtable is full, its contents are sorted, compressed, and flushed to a new, immutable time-shard file on disk
+The project is a hybrid architecture combining a high-performance C++ database with a scalable data engineering pipeline for real-time monitoring.
 
 ### Architecture Diagram
+
 ```mermaid
 flowchart TD
+    subgraph "Data Sources"
+        Producer[C++ Engine / Producer Script]
+    end
 
-    %% =============================
-    %%  API LAYER
-    %% =============================
-    Ingest[API Ingest Request]:::api
-    Query[API Query Request]:::api
+    subgraph "Streaming & Analytics Pipeline"
+        Producer -- "1. Raw Metrics (250k ops/sec)" --> Kafka[Apache Kafka Topic: raw-metrics]
+        Kafka -- "2. Read Stream" --> Spark[Spark Structured Streaming]
+        Spark -- "3. Analyze Compression Ratio" --> Spark
+        Spark -- "4. Write Alert on Anomaly" --> KafkaAlerts[Kafka Topic: alerts]
+        KafkaAlerts -- "5. Consume Alert" --> Consumer[Alerting System]
+    end
 
-    %% =============================
-    %%  WRITE PATH
-    %% =============================
-    Ingest --> WP[Write Path]:::process
+    subgraph "C++ Storage & Query Engine"
+        Producer -- "Direct Ingest" --> API[FastAPI Service]
+        API -- "ctypes bridge" --> CppEngine[C++ Engine]
+        CppEngine <--> Shards[Disk: Time-Sharded .bin Files]
+        API -- "Query" --> Client[GUI / Client]
+    end
 
-    WP -->|"1. Append to WAL - Disk"| WAL[Write-Ahead Log]:::disk
-    WP -->|"2. Insert into Memtable - RAM"| Memtable[Memtable]:::ram
+    classDef streaming fill:#1f78b4,stroke:#0d4473,color:#fff;
+    classDef storage fill:#4caf50,stroke:#2e7d32,color:#fff;
 
-    %% =============================
-    %%  READ PATH (HOT QUERIES)
-    %% =============================
-    Query -->|"3. Read recent data"| Memtable
-
-    %% =============================
-    %%  FLUSH & COMPRESSION
-    %% =============================
-    Memtable -->|"4. Flush when full"| Comp[Compression Stage]:::process
-    
-    Comp -->|"5. Write compressed shard - Disk"| Shard[Time-Sharded .bin File]:::disk
-
-    %% =============================
-    %%  STYLES
-    %% =============================
-    classDef api fill:#1f78b4,stroke:#0d4473,color:#fff,font-weight:bold;
-    classDef process fill:#333,stroke:#111,color:#fff;
-    classDef ram fill:#4caf50,stroke:#2e7d32,color:#fff;
-    classDef disk fill:#6a1b9a,stroke:#4a126d,color:#fff;
-
+    class Kafka, KafkaAlerts, Spark, Producer, Consumer streaming;
+    class API, CppEngine, Shards, Client storage;
 ```
-
-## Technical Deep Dive: Design Decisions
-
-The performance of this database is the result of specific, low-level design trade-offs made to optimize for the time-series use case.
-
-### Why Time-Sharding?
-
-The most common query pattern for time-series data is a short-range time scan. A traditional B-Tree index is inefficient for this. **Time-sharding transforms this problem from a slow, random-I/O disk operation into a blazing-fast, sequential scan** of a single, small, contiguous file that is likely already in the OS page cache.
-
-### Why Custom Compression (Delta-of-Delta & XOR)?
-
-Generic compression algorithms like Gzip are blind to data patterns. Time-series data is highly structured: timestamps are predictable, and values are often similar. By implementing these algorithms from scratch, we can exploit these patterns:
-
-- **Delta-of-Delta** can reduce a 64-bit timestamp to just a few bytes
-- **XOR compression** effectively stores only the changes in a floating-point value's bit pattern
-
-This results in a storage footprint far smaller than what generic tools can achieve.
 
 ## Benchmark Analysis
 
-### Benchmark Environment
-
-All benchmarks were executed on the following developer-grade machine to ensure reproducibility:
-
-- **CPU**: 12th Gen Intel(R) Core(TM) i7-12700H
-- **RAM**: 16 GB
-- **Storage**: 1Tb NVMe SSD Gen 4
-- **OS**: Windows 11 Home (WSL2 Ubuntu 22.04)
-
 ### Performance Results
-
-Benchmarks were run by ingesting and querying a dataset of 1,000,000 pseudo-realistic data points.
 
 | Metric | Result | Analysis |
 |--------|--------|----------|
-| Storage Efficiency | ~8.2 bytes/point | A 50% reduction in storage compared to uncompressed 16-byte data points, achieved via custom compression on high-entropy data |
-| Hot Query Latency (p99) | ~1.3 ms | Querying a 1-hour window of recent data. This validates the speed of the time-sharded architecture combined with OS page caching |
-| Cold Query Latency (p99) | ~16 ms | Querying a 24-hour window of older data. Proves the design successfully avoids slow full-disk scans |
-| Ingestion Throughput | ~5,500 points/sec | Baseline performance. The identified bottleneck is per-point file I/O overhead. The proposed optimization is a batch-ingestion API |
+| **Kafka Ingestion Throughput** | **~267,000 ops/sec** | Validates the scalability of the Kafka pipeline, achieved by using a parallel Python producer to bypass the GIL and saturate multiple cores. |
+| Storage Efficiency | ~8.2 bytes/point | A 50% storage reduction via custom C++ compression on high-entropy data. |
+| Cold Query Latency (p99) | ~12 ms | Querying a 24-hour window proves the time-sharded C++ design avoids slow full-disk scans for historical data analysis. |
+| C++ Ingestion Throughput | ~4,000 points/sec | Baseline for single-point file I/O. Establishes the need for the high-throughput Kafka pipeline for large-scale ingestion. |
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Docker](https://www.docker.com/products/docker-desktop/) & Docker Compose
 - Git
+- Python 3.10+ & `venv`
 
-### 1. Build the Docker Image
+### 1. Launch the Full Stack (Kafka, Spark)
 
-Clone the repository and run the docker build command from the project root:
-
-```bash
-git clone https://github.com/KaranSinghDev/cpp-time-series-database.git
-cd cpp-time-series-database
-docker build -t insight-service .
-```
-
-### 2. Run the Container
+Clone the repository and use Docker Compose to build and start all services in the background.
 
 ```bash
-docker run -p 8000:8000 insight-service
+git clone https://github.com/KaranSinghDev/Time-Series-Database-Engine.git
+cd Time-Series-Database-Engine
+docker-compose up -d
 ```
+- **To view the Spark UI:** Open your browser to `http://localhost:8080`.
 
-The service is now running at `http://127.0.0.1:8000`. Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
+### 2. Run the Real-Time Anomaly Detection Demo
 
-## Local Development & Testing
+This demonstrates the end-to-end streaming pipeline. **Open three separate terminals.**
 
-### Prerequisites
+```bash
+# Terminal 1: Start the Alert Consumer
+python alert_consumer.py
 
-- A C++17 compiler (g++) & CMake
-- Python 3.10+ & pip
+# Terminal 2: Start the Data Producer
+python producer.py
+
+# Terminal 3: Submit the Spark Streaming Job
+docker exec -it tsdb-spark-master /opt/spark/bin/spark-submit \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 \
+  /app/stream_processor.py
+```
+You will now see alerts appear in Terminal 1 whenever the producer in Terminal 2 simulates a compression failure.
+
+### 3. Run the Comprehensive Benchmark Utility
+
+This single script allows you to test both the C++ engine and the Kafka pipeline.
+
+```bash
+# In a new terminal, with the venv activated
+python benchmark.py
+```
+You will be presented with an interactive menu to choose which benchmark to run.
+
+## Local Development & C++ Testing
+
+To work on the C++ engine directly, you'll need a C++17 compiler and CMake.
 
 ### 1. Build the C++ Engine
 
@@ -141,30 +119,8 @@ cmake -B build
 cmake --build build
 ```
 
-### 2. Run the C++ Unit Tests
-
+### 2. Run C++ Unit Tests
 ```bash
-./engine/build/engine_test
+# From the 'engine' directory
+./build/engine_test
 ```
-
-### 3. Set Up & Run Python Tests
-
-```bash
-# From the project root
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-LD_LIBRARY_PATH=./engine/build pytest
-```
-
-## Technology Stack
-
-- **Core Engine**: C++17
-- **API Framework**: Python 3, FastAPI
-- **Build System**: CMake
-- **Testing**: Pytest (Python), C++ unit tests
-- **Deployment**: Docker
-
-## License
-
-This project is provided as-is for educational and demonstration purposes.
