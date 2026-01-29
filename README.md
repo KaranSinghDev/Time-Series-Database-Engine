@@ -1,4 +1,4 @@
-# C++ Time-Series Database & Streaming Analytics Platform 
+# A Time-Series Database & Streaming Analytics Platform 
 
 Intuition: To build a high-performance time-series database engine built from scratch in C++, along with provision of a **real-time streaming analytics pipeline**. This project is an attempt to understand both low-level systems programming and high-throughput data engineering.
 
